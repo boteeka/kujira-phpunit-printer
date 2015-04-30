@@ -44,7 +44,7 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
 
         if ($this->previousClassName !== $this->className) {
             echo "\n\t";
-            echo "\033[01;36m".$this->className."\033[0m".'  ';
+            echo "\033[01;36m".$this->className."\033[0m"."\t";
             $this->previousClassName = $this->className;
         }
 
