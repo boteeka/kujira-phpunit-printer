@@ -76,6 +76,10 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
             case "\033[31;1mE\033[0m":
                 $output = "\033[01;31m" . '[E]' . "\033[0m";
                 break;
+            case 'S':
+            case "\033[36;1mS\033[0m":
+                $output = "\033[01;36m" . '[S]' . "\033[0m";
+                break;
             default:
                 $output = $progress;
         }
