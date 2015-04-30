@@ -1,9 +1,8 @@
 {
-    "name": "kujira/phpunit-printer",
+    "name": "sccs/phpunit-printer",
     "type": "library",
     "description": "A PhpUnit result printer",
     "keywords": ["phpunit","result", "printer", "unit", "test"],
-    "homepage": "https://github.com/cyrilbarragan/kujira-phpunit-printer",
     "license": "MIT",
     "authors": [
         {
@@ -11,10 +10,16 @@
             "email": "cyril.barragan@gmail.com",
             "homepage": "http://www.cyril-barragan.com",
             "role": "Developer"
+        },
+        {
+            "name": "Botond Szasz",
+            "email": "botond.szasz@safechargecardservices.com",
+            "role": "Developer"
         }
     ],
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=5.3.0",
+        "phpunit/phpunit": "4.5.*"
     },
     "autoload": {
         "psr-0": {
