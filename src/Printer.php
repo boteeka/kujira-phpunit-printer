@@ -25,11 +25,13 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
 {
     protected $className;
     protected $previousClassName;
+    protected $previousLineLength;
 
     public function __construct($out = null, $verbose = false, $colors = true, $debug = false)
     {
         ob_start();
         $this->autoFlush = true;
+        $this->previousLineLength = 0;
         parent::__construct($out, $verbose, $colors, $debug);
     }
 
@@ -44,7 +46,15 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
 
         if ($this->previousClassName !== $this->className) {
             echo "\n\t";
-            echo "\033[01;36m".$this->className."\033[0m".'  ';
+            $line = "\033[01;36m".$this->className."\033[0m" . ' ';
+            $line .= str_pad('', 3 - (strlen($line) % 3), ' ', STR_PAD_RIGHT);
+            if ($this->previousLineLength > strlen($line)) {
+                $line = str_pad($line, $this->previousLineLength, ' ', STR_PAD_RIGHT);
+            }
+            if (strlen($line) > $this->previousLineLength) {
+                $this->previousLineLength = strlen($line);
+            }
+            echo $line;
             $this->previousClassName = $this->className;
         }
 
@@ -56,7 +66,15 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
             // failed
             case 'F':
             case "\033[41;37mF\033[0m":
-            $output = "\033[01;31m" . '[-]' . "\033[0m";
+                $output = "\033[01;31m" . '[-]' . "\033[0m";
+                break;
+            case 'I':
+            case "\033[33;1mI\033[0m":
+                $output = "\033[01;33m" . '[I]' . "\033[0m";
+                break;
+            case 'E':
+            case "\033[31;1mE\033[0m":
+                $output = "\033[01;31m" . '[E]' . "\033[0m";
                 break;
             default:
                 $output = $progress;
@@ -100,7 +118,7 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
         $this->write($this->formatExceptionMsg($defect->getExceptionAsString()));
 
         $trace = \PHPUnit_Util_Filter::getFilteredStacktrace(
-          $defect->thrownException()
+            $defect->thrownException()
         );
 
         if (!empty($trace)) {
@@ -110,13 +128,13 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
         $e = $defect->thrownException()->getPrevious();
 
         while ($e) {
-          $this->write(
-            "\nCaused by\n" .
-            \PHPUnit_Framework_TestFailure::exceptionToString($e). "\n" .
-            \PHPUnit_Util_Filter::getFilteredStacktrace($e)
-          );
+            $this->write(
+                "\nCaused by\n" .
+                \PHPUnit_Framework_TestFailure::exceptionToString($e). "\n" .
+                \PHPUnit_Util_Filter::getFilteredStacktrace($e)
+            );
 
-          $e = $e->getPrevious();
+            $e = $e->getPrevious();
         }
     }
 
