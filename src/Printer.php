@@ -9,23 +9,24 @@
  * file that was distributed with this source code.
  */
 
-namespace Kujira\PHPUnit;
+namespace Sccs\PHPUnit;
 
 /**
- * Kujira Result printer
+ * SCCS Result printer
  *
  * It overrides the defaults printer, displaying cross red mark
  * for the failing tests and a green check mark for the passing ones.
  *
  * @author Cyril Barragan <cyril.barragan@gmail.com>
- * @package kujira-phpunit-printer
+ * @author Botond Szasz <botond.szasz@safechargecardservices.com>
+ * @package sccs-phpunit-printer
  */
 class Printer extends \PHPUnit_TextUI_ResultPrinter
 {
     protected $className;
     protected $previousClassName;
 
-    public function __construct($out = NULL, $verbose = FALSE, $colors = TRUE, $debug = FALSE)
+    public function __construct($out = null, $verbose = false, $colors = true, $debug = false)
     {
         ob_start();
         $this->autoFlush = true;
@@ -50,12 +51,12 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
         switch ($progress) {
             // success
             case '.':
-                $output = "\033[01;32m".mb_convert_encoding("\x27\x14", 'UTF-8', 'UTF-16BE')."\033[0m";
+                $output = "\033[01;32m" . '[+]' . "\033[0m";
                 break;
             // failed
             case 'F':
             case "\033[41;37mF\033[0m":
-                $output = "\033[01;31m".mb_convert_encoding("\x27\x16", 'UTF-8', 'UTF-16BE')."\033[0m";
+            $output = "\033[01;31m" . '[-]' . "\033[0m";
                 break;
             default:
                 $output = $progress;
