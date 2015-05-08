@@ -154,7 +154,9 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
         $exceptionMessage = str_replace("--- Expected\n", '', $exceptionMessage);
         $exceptionMessage = str_replace("@@ @@\n", '', $exceptionMessage);
         $exceptionMessage = preg_replace("/(Failed.*)$/m", " \033[01;31m$1\033[0m", $exceptionMessage);
-        $exceptionMessage = preg_replace("/\-+(.*)$/m", "\n \033[01;32m$1\033[0m", $exceptionMessage);
-        return preg_replace("/\++(.*)$/m", " \033[01;31m$1\033[0m", $exceptionMessage);
+//        $exceptionMessage = preg_replace("/\-+(.*)$/m", "\n \033[01;32m$1\033[0m", $exceptionMessage);
+//        $exceptionMessage = preg_replace("/\++(.*)$/m", " \033[01;31m$1\033[0m", $exceptionMessage);
+
+        return $exceptionMessage;
     }
 }
