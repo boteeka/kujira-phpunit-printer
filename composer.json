@@ -3,14 +3,8 @@
     "type": "library",
     "description": "A PhpUnit result printer",
     "keywords": ["phpunit","result", "printer", "unit", "test"],
-    "license": "MIT",
+    "license": "proprietary",
     "authors": [
-        {
-            "name": "Cyril Barragan",
-            "email": "cyril.barragan@gmail.com",
-            "homepage": "http://www.cyril-barragan.com",
-            "role": "Developer"
-        },
         {
             "name": "Botond Szasz",
             "email": "botond.szasz@safechargecardservices.com",
@@ -18,8 +12,9 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0",
-        "phpunit/phpunit": "^4.7.0"
+        "php": ">=5.5.0",
+        "phpunit/phpunit": "^4.7.0",
+        "symfony/console": "^2.7.7"
     },
     "autoload": {
         "psr-0": {

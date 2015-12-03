@@ -1,24 +1,14 @@
 <?php
 
-/*
- * This file is part of the kujira-phpunit-printer.
- *
- * (c) Cyril Barragan <cyril.barragan@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Sccs\PHPUnit;
+
+use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
 /**
  * SCCS Result printer
  *
- * It overrides the defaults printer, displaying cross red mark
- * for the failing tests and a green check mark for the passing ones.
- *
- * @author Cyril Barragan <cyril.barragan@gmail.com>
- * @author Botond Szasz <botond.szasz@safechargecardservices.com>
+ * @author  Botond Szasz <botond.szasz@safechargecardservices.com>
  * @package sccs-phpunit-printer
  */
 class Printer extends \PHPUnit_TextUI_ResultPrinter
@@ -26,137 +16,131 @@ class Printer extends \PHPUnit_TextUI_ResultPrinter
     protected $className;
     protected $previousClassName;
     protected $previousLineLength;
+    protected $outputFormatter;
 
-    public function __construct($out = null, $verbose = false, $colors = true, $debug = false)
+
+    /**
+     * Printer constructor.
+     *
+     * @param null          $out
+     * @param boolean|true  $verbose
+     * @param boolean|true  $colors
+     * @param boolean|false $debug
+     */
+    public function __construct($out = null, $verbose = true, $colors = true, $debug = false)
     {
-        ob_start();
-        $this->autoFlush = true;
+        $this->autoFlush          = true;
         $this->previousLineLength = 0;
+        $this->outputFormatter    = new OutputFormatter(
+            true,
+            [
+                'bullet'     => new OutputFormatterStyle('yellow'),
+                'testclass'  => new OutputFormatterStyle('cyan'),
+                'test'       => new OutputFormatterStyle('magenta'),
+                'sep'        => new OutputFormatterStyle('white'),
+                'success'    => new OutputFormatterStyle('black', 'green'),
+                'failure'    => new OutputFormatterStyle('black', 'red'),
+                'incomplete' => new OutputFormatterStyle('black', 'white'),
+                'skipped'    => new OutputFormatterStyle('black', 'cyan'),
+                'stats'      => new OutputFormatterStyle('blue'),
+
+            ]
+        );
         parent::__construct($out, $verbose, $colors, $debug);
+        ob_start();
     }
+
 
     /**
      * {@inheritdoc}
      */
     protected function writeProgress($progress)
     {
+        $outputFormatter = $this->outputFormatter;
+
         if ($this->debug) {
             return parent::writeProgress($progress);
-        }
-
-        if ($this->previousClassName !== $this->className) {
-            echo "\n\t";
-            $line = "\033[01;36m".$this->className."\033[0m" . ' ';
-            $line .= str_pad('', 3 - (strlen($line) % 3), ' ', STR_PAD_RIGHT);
-            if ($this->previousLineLength > strlen($line)) {
-                $line = str_pad($line, $this->previousLineLength, ' ', STR_PAD_RIGHT);
-            }
-            if (strlen($line) > $this->previousLineLength) {
-                $this->previousLineLength = strlen($line);
-            }
-            echo $line;
-            $this->previousClassName = $this->className;
         }
 
         switch ($progress) {
             // success
             case '.':
-                $output = "\033[01;32m" . '[+]' . "\033[0m";
+                $output = '<success>[PASS]</success>';
                 break;
             // failed
             case 'F':
             case "\033[41;37mF\033[0m":
-                $output = "\033[01;31m" . '[-]' . "\033[0m";
+                $output = '<failure>[FAIL]</failure>';
                 break;
             case 'I':
             case "\033[33;1mI\033[0m":
-                $output = "\033[01;33m" . '[I]' . "\033[0m";
+                $output = '<incomplete>[INCOMPLETE]</incomplete>';
                 break;
             case 'E':
             case "\033[31;1mE\033[0m":
-                $output = "\033[01;31m" . '[E]' . "\033[0m";
+                $output = '<error>[ERROR]</error>';
                 break;
             case 'S':
             case "\033[36;1mS\033[0m":
-                $output = "\033[01;36m" . '[S]' . "\033[0m";
+                $output = '<skipped>[SKIPPED]</skipped>';
                 break;
             default:
                 $output = $progress;
         }
 
-        echo "$output";
+        $this->write($outputFormatter->format($output));
     }
+
+
+    /**
+     * {@inheritdoc}
+     */
+    public function write($buffer)
+    {
+        parent::write($buffer);
+        @ob_flush();
+    }
+
 
     /**
      * {@inheritdoc}
      */
     public function startTest(\PHPUnit_Framework_Test $test)
     {
-        $this->className = get_class($test);
+        $outputFormatter = $this->outputFormatter;
+
         parent::startTest($test);
+        $this->className = get_class($test);
+        $message         = $outputFormatter->format(
+            sprintf(
+                "\n <bullet>></bullet> <testclass>%s</testclass><sep>:</sep><test>%s</test> ",
+                $this->className,
+                $test->getName()
+            )
+        );
+        $this->write($message);
     }
+
 
     /**
      * {@inheritdoc}
      */
-    protected function printDefects(array $defects, $type)
+    public function endTest(\PHPUnit_Framework_Test $test, $time)
     {
-        $count = count($defects);
+        parent::endTest($test, $time);
 
-        if ($count == 0) {
-            return;
-        }
+        $outputFormatter = $this->outputFormatter;
 
-        $i = 1;
+        $numAssertions = $test->getNumAssertions();
 
-        foreach ($defects as $defect) {
-            $this->printDefect($defect, $i++);
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function printDefectTrace(\PHPUnit_Framework_TestFailure $defect)
-    {
-        $this->write($this->formatExceptionMsg($defect->getExceptionAsString()));
-
-        $trace = \PHPUnit_Util_Filter::getFilteredStacktrace(
-            $defect->thrownException()
+        $message = $outputFormatter->format(
+            sprintf(
+                ' <stats>(assertions: %s; time: %01.2f sec.)</stats>',
+                $numAssertions,
+                $time
+            )
         );
 
-        if (!empty($trace)) {
-            $this->write("\n" . $trace);
-        }
-
-        $e = $defect->thrownException()->getPrevious();
-
-        while ($e) {
-            $this->write(
-                "\nCaused by\n" .
-                \PHPUnit_Framework_TestFailure::exceptionToString($e). "\n" .
-                \PHPUnit_Util_Filter::getFilteredStacktrace($e)
-            );
-
-            $e = $e->getPrevious();
-        }
-    }
-
-    /**
-     * Add colors and removes superfluous informations
-     *
-     * @param string $exceptionMessage
-     * @return string
-     */
-    protected function formatExceptionMsg($exceptionMessage)
-    {
-        $exceptionMessage = str_replace("+++ Actual\n", '', $exceptionMessage);
-        $exceptionMessage = str_replace("--- Expected\n", '', $exceptionMessage);
-        $exceptionMessage = str_replace("@@ @@\n", '', $exceptionMessage);
-        $exceptionMessage = preg_replace("/(Failed.*)$/m", " \033[01;31m$1\033[0m", $exceptionMessage);
-//        $exceptionMessage = preg_replace("/\-+(.*)$/m", "\n \033[01;32m$1\033[0m", $exceptionMessage);
-//        $exceptionMessage = preg_replace("/\++(.*)$/m", " \033[01;31m$1\033[0m", $exceptionMessage);
-
-        return $exceptionMessage;
+        $this->write($message);
     }
 }
